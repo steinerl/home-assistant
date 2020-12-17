@@ -17,12 +17,10 @@ from .const import (
     ATTR_BATTERY_CRITICAL,
     ATTR_DATA,
     ATTR_NUKI_ID,
-    ATTR_RING_ACTION_TIMESTAMP,
     ATTR_UNLATCH,
     DEFAULT_PORT,
     DEFAULT_TIMEOUT,
     ERROR_STATES,
-    EVENT_NUKI_BELL_RING,
 )
 from .webhook import register_webhook
 
@@ -210,11 +208,6 @@ class NukiLockEntity(NukiDeviceEntity):
 class NukiOpenerEntity(NukiDeviceEntity):
     """Representation of a Nuki opener."""
 
-    def __init__(self, nuki_device, use_webhook):
-        """Initialize the lock."""
-        super().__init__(nuki_device, use_webhook)
-        self._last_ring_action_timestamp = self._nuki_device.ring_action_timestamp
-
     @property
     def is_locked(self):
         """Return true if ring-to-open is enabled."""
@@ -234,20 +227,3 @@ class NukiOpenerEntity(NukiDeviceEntity):
 
     def lock_n_go(self, unlatch):
         """Stub service."""
-
-    async def handle_callback(self, event):
-        """Handle webhook events."""
-        await super().handle_callback(event)
-
-        if (
-            self._nuki_device.ring_action_state is True
-            and self._last_ring_action_timestamp
-            != self._nuki_device.ring_action_timestamp
-        ):
-            event_data = {
-                ATTR_NUKI_ID: self._nuki_device.nuki_id,
-                ATTR_RING_ACTION_TIMESTAMP: self._nuki_device.ring_action_timestamp,
-            }
-            self.hass.bus.fire(EVENT_NUKI_BELL_RING, event_data)
-
-        self._last_ring_action_timestamp = self._nuki_device.ring_action_timestamp
