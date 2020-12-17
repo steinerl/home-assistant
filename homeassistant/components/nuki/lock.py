@@ -113,7 +113,7 @@ class NukiDeviceEntity(LockEntity, ABC):
 
     async def handle_callback(self, event):
         """Handle callback events."""
-        _LOGGER.info("Got callback event: %s", event)
+        _LOGGER.debug("Got callback event: %s", event)
 
         self._nuki_device.update_from_callback(event[ATTR_DATA])
 
@@ -248,8 +248,6 @@ class NukiOpenerEntity(NukiDeviceEntity):
     async def handle_callback(self, event):
         """Handle webhook events."""
         await super().handle_callback(event)
-
-        _LOGGER.debug("Opener handle_callback")
 
         if (
             self._nuki_device.ring_action_state is True
