@@ -2,7 +2,6 @@
 from abc import ABC, abstractmethod
 from datetime import timedelta
 import logging
-from typing import List
 
 from pynuki import NukiBridge
 from requests.exceptions import RequestException
@@ -10,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockEntity
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, CONF_WEBHOOK_ID
-from homeassistant.core import CALLBACK_TYPE
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -89,27 +87,19 @@ class NukiDeviceEntity(LockEntity, ABC):
         self._nuki_device = nuki_device
         self._use_webhook = use_webhook
         self._available = nuki_device.state not in ERROR_STATES
-        self._listeners: List[CALLBACK_TYPE] = []
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
 
         if self._use_webhook:
-            self._listeners.append(
+            self.async_on_remove(
                 async_dispatcher_connect(
                     self.hass,
                     f"signal-{DOMAIN}-webhook-{self._nuki_device.nuki_id}",
                     self.handle_callback,
                 )
             )
-
-    async def async_will_remove_from_hass(self):
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-
-        for listener in self._listeners:
-            listener()
 
     async def handle_callback(self, event):
         """Handle callback events."""
